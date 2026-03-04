@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { MessageCircle, TrendingUp, AlertTriangle, Send, ChevronRight, Clock, Users, Zap, X, Check } from "lucide-react";
+import { MessageCircle, TrendingUp, AlertTriangle, Send, ChevronRight, Clock, Users, Check } from "lucide-react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, orderBy, onSnapshot } from "firebase/firestore";
 
@@ -43,12 +43,9 @@ export default function FeedbackApp() {
   const [formStep, setFormStep] = useState(0);
   const [formData, setFormData] = useState({ theme: "", product: "", otherProduct: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
   const [submitted, setSubmitted] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const [timerActive, setTimerActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [seeded, setSeeded] = useState(false);
 
-  // Real-time listener for Firestore
   useEffect(() => {
     const q = query(collection(db, "feedback"), orderBy("date", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -57,7 +54,6 @@ export default function FeedbackApp() {
         setEntries(data);
         setSeeded(true);
       } else if (!seeded) {
-        // Seed sample data on first load
         seedSampleData();
       }
       setLoading(false);
@@ -82,24 +78,13 @@ export default function FeedbackApp() {
     }
   };
 
-  useEffect(() => {
-    let interval;
-    if (timerActive) {
-      interval = setInterval(() => setTimer((t) => t + 1), 1000);
-    }
-    return () => clearInterval(interval);
-  }, [timerActive]);
-
   const resetForm = () => {
     setFormStep(0);
     setFormData({ theme: "", product: "", otherProduct: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
     setSubmitted(false);
-    setTimer(0);
-    setTimerActive(false);
   };
 
   const handleSubmit = async () => {
-    setTimerActive(false);
     const newEntry = {
       date: new Date().toISOString().split("T")[0],
       submittedBy: formData.submittedBy || "Anonymous",
@@ -152,7 +137,6 @@ export default function FeedbackApp() {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0F0B1E 0%, #1A1145 40%, #0D1B2A 100%)", color: "#E2E8F0", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       
-      {/* Header */}
       <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(20px)", background: "rgba(15,11,30,0.8)", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -172,7 +156,7 @@ export default function FeedbackApp() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => { setView(tab.id); if (tab.id === "submit") { resetForm(); setTimerActive(true); } }}
+                onClick={() => { setView(tab.id); if (tab.id === "submit") resetForm(); }}
                 style={{
                   padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
                   background: view === tab.id ? "linear-gradient(135deg, #6366F1, #7C3AED)" : "transparent",
@@ -190,10 +174,8 @@ export default function FeedbackApp() {
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 48px" }}>
 
-        {/* =================== DASHBOARD VIEW =================== */}
         {view === "dashboard" && (
           <div>
-            {/* Stats Row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
               {[
                 { label: "Total Feedback", value: entries.length, icon: <MessageCircle size={18} />, color: "#6366F1", sub: "all time" },
@@ -213,7 +195,6 @@ export default function FeedbackApp() {
               ))}
             </div>
 
-            {/* Charts Row */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
               <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#F8FAFC", marginBottom: 20 }}>Feedback by Theme</div>
@@ -254,7 +235,6 @@ export default function FeedbackApp() {
               </div>
             </div>
 
-            {/* Product breakdown */}
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#F8FAFC", marginBottom: 16 }}>Top Products Mentioned</div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -269,30 +249,17 @@ export default function FeedbackApp() {
           </div>
         )}
 
-        {/* =================== SUBMIT VIEW =================== */}
         {view === "submit" && (
           <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            {!submitted && (
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, background: timer > 60 ? "rgba(220,38,38,0.15)" : "rgba(99,102,241,0.1)", borderRadius: 20, padding: "6px 16px", border: `1px solid ${timer > 60 ? "rgba(220,38,38,0.3)" : "rgba(99,102,241,0.2)"}` }}>
-                  <Zap size={14} color={timer > 60 ? "#F87171" : "#818CF8"} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: timer > 60 ? "#F87171" : "#818CF8", fontVariantNumeric: "tabular-nums" }}>
-                    {timer}s — {timer <= 60 ? "On track for <1 min!" : "Take your time"}
-                  </span>
-                </div>
-              </div>
-            )}
-
             {submitted ? (
               <div style={{ textAlign: "center", padding: "60px 20px" }}>
                 <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg, #059669, #10B981)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                   <Check size={32} color="white" />
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#F8FAFC", marginBottom: 8 }}>Feedback Submitted!</div>
-                <div style={{ fontSize: 14, color: "#94A3B8", marginBottom: 4 }}>Completed in {timer} seconds</div>
-                <div style={{ fontSize: 13, color: "#64748B", marginBottom: 24 }}>{timer <= 60 ? "Under 1 minute — great job! ⚡" : "Thanks for the detailed feedback!"}</div>
+                <div style={{ fontSize: 13, color: "#64748B", marginBottom: 24 }}>Thanks for sharing!</div>
                 <button
-                  onClick={() => { resetForm(); setTimerActive(true); }}
+                  onClick={resetForm}
                   style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #6366F1, #7C3AED)", color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
                 >
                   Submit Another
@@ -300,14 +267,12 @@ export default function FeedbackApp() {
               </div>
             ) : (
               <div>
-                {/* Progress bar */}
                 <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
                   {[0, 1, 2, 3].map((step) => (
                     <div key={step} style={{ flex: 1, height: 4, borderRadius: 2, background: formStep >= step ? "linear-gradient(90deg, #6366F1, #8B5CF6)" : "rgba(255,255,255,0.06)", transition: "all 0.3s" }} />
                   ))}
                 </div>
 
-                {/* Step 0: Theme */}
                 {formStep === 0 && (
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#F8FAFC", marginBottom: 4 }}>What's the feedback about?</div>
@@ -331,7 +296,6 @@ export default function FeedbackApp() {
                   </div>
                 )}
 
-                {/* Step 1: Product + Customer */}
                 {formStep === 1 && (
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#F8FAFC", marginBottom: 4 }}>Quick details</div>
@@ -422,7 +386,6 @@ export default function FeedbackApp() {
                   </div>
                 )}
 
-                {/* Step 2: The Ask */}
                 {formStep === 2 && (
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#F8FAFC", marginBottom: 4 }}>What did the customer ask for?</div>
@@ -471,7 +434,6 @@ export default function FeedbackApp() {
                   </div>
                 )}
 
-                {/* Step 3: Priority + Submit */}
                 {formStep === 3 && (
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#F8FAFC", marginBottom: 4 }}>How critical is this?</div>
@@ -497,11 +459,10 @@ export default function FeedbackApp() {
                       ))}
                     </div>
 
-                    {/* Summary */}
                     <div style={{ background: "rgba(99,102,241,0.06)", borderRadius: 12, padding: 16, border: "1px solid rgba(99,102,241,0.12)", marginBottom: 20 }}>
                       <div style={{ fontSize: 12, color: "#818CF8", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Summary</div>
                       <div style={{ fontSize: 13, color: "#CBD5E1", lineHeight: 1.6 }}>
-                        <strong>{THEMES.find((t) => t.id === formData.theme)?.icon} {THEMES.find((t) => t.id === formData.theme)?.label}</strong> — {formData.product} — {formData.customer}
+                        <strong>{THEMES.find((t) => t.id === formData.theme)?.icon} {THEMES.find((t) => t.id === formData.theme)?.label}</strong> — {formData.product === "Other" && formData.otherProduct ? formData.otherProduct : formData.product} — {formData.customer}
                         <br />"{formData.request}"
                         <br /><span style={{ color: "#94A3B8" }}>by {formData.submittedBy}</span>
                       </div>
@@ -523,7 +484,6 @@ export default function FeedbackApp() {
           </div>
         )}
 
-        {/* =================== FEED VIEW =================== */}
         {view === "feed" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
