@@ -1,4 +1,4 @@
-t";
+"use client";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MessageCircle, TrendingUp, AlertTriangle, Send, ChevronRight, Clock, Users, Zap, X, Check } from "lucide-react";
