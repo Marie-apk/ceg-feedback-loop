@@ -1,4 +1,4 @@
-"use client";
+t";
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MessageCircle, TrendingUp, AlertTriangle, Send, ChevronRight, Clock, Users, Zap, X, Check } from "lucide-react";
@@ -41,7 +41,7 @@ export default function FeedbackApp() {
   const [view, setView] = useState("dashboard");
   const [entries, setEntries] = useState([]);
   const [formStep, setFormStep] = useState(0);
-  const [formData, setFormData] = useState({ theme: "", product: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
+  const [formData, setFormData] = useState({ theme: "", product: "", otherProduct: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
   const [submitted, setSubmitted] = useState(false);
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
@@ -92,7 +92,7 @@ export default function FeedbackApp() {
 
   const resetForm = () => {
     setFormStep(0);
-    setFormData({ theme: "", product: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
+    setFormData({ theme: "", product: "", otherProduct: "", customer: "", segment: "", priority: "", request: "", frequency: "", submittedBy: "" });
     setSubmitted(false);
     setTimer(0);
     setTimerActive(false);
@@ -104,7 +104,7 @@ export default function FeedbackApp() {
       date: new Date().toISOString().split("T")[0],
       submittedBy: formData.submittedBy || "Anonymous",
       theme: formData.theme,
-      product: formData.product,
+      product: formData.product === "Other" && formData.otherProduct ? formData.otherProduct : formData.product,
       customer: formData.customer,
       segment: formData.segment,
       priority: formData.priority,
@@ -366,6 +366,19 @@ export default function FeedbackApp() {
                         ))}
                       </div>
                     </div>
+
+                    {formData.product === "Other" && (
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 12, color: "#94A3B8", fontWeight: 600, marginBottom: 8, display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>Specify Product</label>
+                        <input
+                          type="text"
+                          value={formData.otherProduct || ""}
+                          onChange={(e) => setFormData({ ...formData, otherProduct: e.target.value })}
+                          placeholder="e.g. App Engine, Strategic Portfolio Management"
+                          style={{ width: "100%", padding: "12px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "#F8FAFC", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                    )}
 
                     <div style={{ marginBottom: 16 }}>
                       <label style={{ fontSize: 12, color: "#94A3B8", fontWeight: 600, marginBottom: 8, display: "block", textTransform: "uppercase", letterSpacing: "0.05em" }}>Customer Name</label>
