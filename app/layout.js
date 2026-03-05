@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'CEG Feedback Loop',
+  title: 'CEG Customer Feeback and Questions',
   description: 'Customer Feedback Insights for CEG',
 }
 
